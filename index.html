@@ -283,7 +283,7 @@ section > .wrap > h2 { margin-bottom: var(--head-gap); }
       <div class="hero__words">
         <h1 class="enter">GTA VI PC port tracker</h1>
         <p class="lead hero__fact enter">Playable: no. victory-fork, a public fork of VIctory, is furthest, at stage&nbsp;6&nbsp;of&nbsp;7.</p>
-        <p class="hero__how enter">Twenty-three open-source projects and three private builds are trying to run the game&rsquo;s Xbox build on a PC. This page reads their public repositories every 15 minutes and says how far each has got. <span class="muted">Checked <time id="checked" datetime="2026-11-25T10:16:00Z">10:16 UTC on 25 Nov</time><span id="ago"></span>.</span></p>
+        <p class="hero__how enter">Twenty-three open-source projects and three private builds are trying to run the game&rsquo;s Xbox build on a PC. This page reads their public repositories every 15 minutes and says how far each has got. <span class="muted">Checked <time id="checked" datetime="2026-11-25T10:16:00Z">10:16 UTC on 25 Nov</time><span id="local"></span><span id="ago"></span>.</span></p>
         <div class="btn-row enter">
           <a class="btn btn--primary" href="#standings">See the standings</a>
           <a class="btn btn--secondary" href="#updates">Read the latest update</a>
@@ -1468,13 +1468,24 @@ section > .wrap > h2 { margin-bottom: var(--head-gap); }
     nav.querySelector(".nav__links").addEventListener("click", function () { setOpen(false); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") { setOpen(false); } });
   }
-  // How long ago the page was checked.
+  // How long ago the page was checked, plus the same instant in the reader's local time.
   try {
     var t = document.getElementById("checked");
-    var mins = Math.round((Date.now() - new Date(t.getAttribute("datetime")).getTime()) / 60000);
+    var checkedAt = new Date(t.getAttribute("datetime"));
+    var mins = Math.round((Date.now() - checkedAt.getTime()) / 60000);
     if (isFinite(mins) && mins >= 0) {
       var text = mins < 1 ? "just now" : mins < 90 ? mins + " min ago" : Math.round(mins / 60) + " h ago";
       document.getElementById("ago").textContent = ", " + text;
+    }
+    if (isFinite(checkedAt.getTime())) {
+      var local = checkedAt.toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+      });
+      var zone = "";
+      try { zone = Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+        .formatToParts(checkedAt).filter(function (p) { return p.type === "timeZoneName"; })
+        .map(function (p) { return p.value; }).join(""); } catch (e) {}
+      document.getElementById("local").textContent = " · " + local + (zone ? " " + zone : "") + " local";
     }
   } catch (e) {}
   // The estimate counts down between checks.
